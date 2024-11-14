@@ -64,3 +64,160 @@ export default function Posts() {
 ```
 
 Kode di atas menggunakan hook `useEffect` untuk menjalankan fungsi `fetchPosts` ketika komponen pertama kali dirender. Fungsi `fetchPosts` ini berfungsi untuk mengambil data dari API eksternal menggunakan metode `fetch`, yang merupakan metode bawaan JavaScript. Setelah data diambil, respons diubah menjadi format JSON dan disimpan dalam state `posts` menggunakan hook `useState`. State ini kemudian digunakan untuk menampilkan data dalam elemen HTML `<ul>`, di mana setiap item `<li>` menampilkan judul `(title)` dan konten `(body)` dari masing-masing post.
+
+### 2. POST: Membuat Data
+
+Kode berikut adalah komponen `CreatePost` yang dibuat menggunakan `Nextjs`, di mana kita dapat membuat postingan baru dengan mengirimkan data ke endpoint API menggunakan fetch. Komponen ini berfungsi sebagai form input sederhana untuk mengisi judul dan isi postingan.
+
+## Kode Lengkap Komponen
+
+```typescript
+"use client";
+import { useState } from "react";
+
+export default function CreatePost() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [message, setMessage] = useState("");
+  const [createdPost, setCreatedPost] = useState<any>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/posts",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            body,
+            userId: 1,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setMessage("Post created successfully!");
+      setTitle("");
+      setBody("");
+      setCreatedPost(data);
+      console.log("Created post:", data);
+    } catch (error) {
+      setMessage("Error creating post");
+      console.error("Error:", error);
+    }
+  };
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Create New Post</h1>
+      {message && (
+        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+          {message}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1">Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1">Body:</label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className="w-full border p-2 rounded"
+            rows={4}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Create Post
+        </button>
+      </form>
+
+      {createdPost && (
+        <div className="mt-6 p-4 bg-gray-100 rounded">
+          <h2 className="text-xl font-semibold">Created Post:</h2>
+
+          <p>
+            <strong>Title:</strong> {createdPost.title}
+          </p>
+          <p>
+            <strong>Body:</strong> {createdPost.body}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## Informasi
+
+- Metode POST dalam kode di atas digunakan untuk mengirim data ke server dan membuat entri baru dalam basis data atau layanan API. Di dalam fungsi handleSubmit, POST dikonfigurasi untuk mengirim data JSON berisi title, body, dan userId ke endpoint API `https://jsonplaceholder.typicode.com/posts`.
+- URL: Mengarah ke endpoint yang menerima data baru `(https://jsonplaceholder.typicode.com/posts)`.
+- Headers: Mengatur Content-Type sebagai application/json untuk menunjukkan bahwa data dikirim dalam format JSON.
+- Body: Berisi objek JSON yang mencakup title, body, dan userId, yang dikirim sebagai data baru untuk membuat post.
+- Response Handling: Jika pengiriman berhasil, respons JSON diterima dan ditampilkan di halaman. Jika ada kesalahan, pesan error ditampilkan.
+
+## Penjelasan Kode
+
+```typescript
+const [title, setTitle] = useState("");
+const [body, setBody] = useState("");
+const [message, setMessage] = useState("");
+const [createdPost, setCreatedPost] = useState<any>(null);
+```
+
+- `title` dan `body` digunakan untuk menyimpan input dari user.
+- `message` digunakan untuk menampilkan pesan sukses atau error setelah proses pembuatan posting.
+- `createdPost` digunakan untuk menyimpan data posting yang berhasil dibuat dan menampilkannya di layar user.
+
+```typescript
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        userId: 1,
+      }),
+    });
+
+    const data = await response.json();
+    setMessage("Post created successfully!");
+    setTitle("");
+    setBody("");
+    setCreatedPost(data);
+    console.log("Created post:", data);
+  } catch (error) {
+    setMessage("Error creating post");
+    console.error("Error:", error);
+  }
+};
+```
+
+- Fungsi `handleSubmit` akan dipanggil ketika form di-submit. Fungsi ini akan mengirimkan data posting ke endpoint API menggunakan metode POST.
+- Data yang dikirimkan berupa objek JSON yang berisi `title`, `body`, dan `userId`.
+- Jika proses berhasil, pesan sukses akan ditampilkan, dan data posting yang berhasil dibuat akan disimpan dalam state `createdPost`.
+- Jika terjadi error, pesan error akan ditampilkan di layar.
