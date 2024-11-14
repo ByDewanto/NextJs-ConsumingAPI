@@ -221,3 +221,278 @@ const handleSubmit = async (e: React.FormEvent) => {
 - Data yang dikirimkan berupa objek JSON yang berisi `title`, `body`, dan `userId`.
 - Jika proses berhasil, pesan sukses akan ditampilkan, dan data posting yang berhasil dibuat akan disimpan dalam state `createdPost`.
 - Jika terjadi error, pesan error akan ditampilkan di layar.
+
+### 3. PUT: Memperbarui Data
+
+Kode berikut adalah komponen `CreatePost` yang dibuat menggunakan `Nextjs`, di mana kita dapat membuat postingan baru dengan mengirimkan data ke endpoint API menggunakan fetch. Komponen ini berfungsi sebagai form input sederhana untuk mengisi judul dan isi postingan.
+
+Metode PUT dalam HTTP digunakan untuk memperbarui data yang sudah ada di server. Dalam aplikasi `Next.js`, kita dapat menggunakan metode PUT untuk mengirim perubahan data yang telah diambil dari API dan disesuaikan oleh pengguna. Pada contoh kode ini, kita akan membuat komponen `EditPost` yang berisi form sederhana yang memungkinkan pengguna untuk mengedit postingan yang sudah ada berdasarkan id.
+
+## Kode Lengkap Komponen
+
+```typescript
+// app/edit-post/[id]/page.tsx
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}
+
+export default function EditPost() {
+  const params = useParams();
+  const [post, setPost] = useState<Post | null>(null);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [message, setMessage] = useState("");
+  const [updatedPost, setUpdatedPost] = useState<Post | null>(null);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/posts/${params.id}`
+        );
+        const data = await response.json();
+        setPost(data);
+        setTitle(data.title);
+        setBody(data.body);
+      } catch (error) {
+        console.error("Error fetching post:", error);
+      }
+    };
+
+    fetchPost();
+  }, [params?.id]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${params.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: Number(params.id),
+            title,
+            body,
+            userId: post?.userId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setMessage("Post updated successfully!");
+      setUpdatedPost(data);
+      console.log("Updated post:", data);
+    } catch (error) {
+      setMessage("Error updating pos");
+      console.error("Error:", error);
+    }
+  };
+
+  if (!post) return <div>Loading...</div>;
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
+      {message && (
+        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+          {message}
+        </div>
+      )}
+      <form onSubmit={handleUpdate} className="space-y-4">
+        <div>
+          <label className="block mb-1">Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border p-2 rounded text-black"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1">Body:</label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className="w-full border p-2 rounded text-black"
+            rows={4}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Update Post
+        </button>
+      </form>
+
+      {updatedPost && (
+        <div className="mt-6 p-4 bg-gray-100 rounded text-black">
+          <h2 className="text-xl font-semibold">Updated Post:</h2>
+          <p>
+            <strong>Title:</strong> {updatedPost.title}
+          </p>
+          <p>
+            <strong>Body:</strong> {updatedPost.body}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## Informasi
+
+- Metode PUT digunakan untuk mengirim data yang diperbarui ke server dan memperbarui entri yang sudah ada dalam basis data atau layanan API. Pada komponen ini, fungsi PUT berperan untuk memperbarui postingan yang dipilih berdasarkan ID dari postingan tersebut.
+- URL: Mengarah ke endpoint yang menerima pembaruan data `(https://jsonplaceholder.typicode.com/posts/{id})`.
+- Headers: Mengatur Content-Type sebagai application/json untuk menunjukkan bahwa data dikirim dalam format JSON.
+- Body: Memuat objek JSON dengan id, title, body, dan userId. Data ini dikirim sebagai pembaruan untuk postingan yang sudah ada.
+- Response Handling: Jika pengiriman berhasil, respons JSON diterima dan ditampilkan di halaman. Jika ada kesalahan, pesan error ditampilkan.
+
+## Penjelasan Kode
+
+```typescript
+const params = useParams();
+const [post, setPost] = useState<Post | null>(null);
+const [title, setTitle] = useState("");
+const [body, setBody] = useState("");
+const [message, setMessage] = useState("");
+const [updatedPost, setUpdatedPost] = useState<Post | null>(null);
+```
+
+- `params`: menggunakan useParams dari Next.js untuk mendapatkan parameter ID dari URL, sehingga kita dapat mengambil dan memperbarui postingan berdasarkan ID tersebut.
+- `post`: state untuk menyimpan data postingan yang diambil dari server berdasarkan ID.
+- `title` dan `body`: menyimpan input dari pengguna untuk judul dan isi postingan yang ingin diperbarui.
+- `message`: menyimpan pesan hasil proses, baik sukses maupun error, setelah pembaruan data dilakukan.
+- `updatePost`: menyimpan data postingan yang sudah diperbarui dari respons server, dan digunakan untuk menampilkan hasil pembaruan.
+
+```typescript
+useEffect(() => {
+  const fetchPost = async () => {
+    try {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${params.id}`
+      );
+      const data = await response.json();
+      setPost(data);
+      setTitle(data.title);
+      setBody(data.body);
+    } catch (error) {
+      console.error("Error fetching post:", error);
+    }
+  };
+
+  fetchPost();
+}, [params?.id]);
+```
+
+- `useEffect`: hook ini digunakan untuk mengambil data postingan berdasarkan ID ketika komponen dimuat.
+- Fungsi `fetchPost` mengirim permintaan GET ke endpoint API untuk mengambil data postingan.
+- Setelah data diterima, data ini diatur ke dalam state `post`, `title`, dan `body`, sehingga form dapat menampilkan data postingan yang siap diperbarui oleh pengguna.
+- Jika terjadi error saat mengambil data, error tersebut dicatat di konsol.
+
+```typescript
+const handleUpdate = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/posts/${params.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: Number(params.id),
+          title,
+          body,
+          userId: post?.userId,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    setMessage("Post updated successfully!");
+    setUpdatedPost(data);
+    console.log("Updated post:", data);
+  } catch (error) {
+    setMessage("Error updating post");
+    console.error("Error:", error);
+  }
+};
+```
+
+- `handleUpdate`: fungsi ini dipanggil ketika pengguna mengirim form untuk memperbarui postingan.
+- Data yang dikirim melalui metode `PUT` termasuk `id`, `title`, `body`, dan `userId` dari postingan yang ingin diperbarui.
+- Setelah pembaruan berhasil, respons dari server disimpan dalam state `updatePost`, dan pesan sukses ditampilkan kepada pengguna. Jika terjadi error, pesan error akan ditampilkan.
+
+```typescript
+if (!post) return <div>Loading...</div>;
+```
+
+- Kondisi ini digunakan untuk menampilkan pesan `"Loading..."` ketika data postingan belum diambil dari server.
+
+```typescript
+<form onSubmit={handleUpdate} className="space-y-4">
+  <div>
+    <label className="block mb-1">Title:</label>
+    <input
+      type="text"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      className="w-full border p-2 rounded text-black"
+      required
+    />
+  </div>
+  <div>
+    <label className="block mb-1">Body:</label>
+    <textarea
+      value={body}
+      onChange={(e) => setBody(e.target.value)}
+      className="w-full border p-2 rounded text-black"
+      rows={4}
+      required
+    />
+  </div>
+  <button
+    type="submit"
+    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+  >
+    Update Post
+  </button>
+</form>
+```
+
+- `Form`: memungkinkan pengguna untuk mengubah `title` dan `body` postingan. Saat form di-submit, fungsi `handleUpdate` dipanggil untuk memperbarui data.
+
+```typescript
+{
+  updatedPost && (
+    <div className="mt-6 p-4 bg-gray-100 rounded text-black">
+      <h2 className="text-xl font-semibold">Updated Post:</h2>
+      <p>
+        <strong>Title:</strong> {updatedPost.title}
+      </p>
+      <p>
+        <strong>Body:</strong> {updatedPost.body}
+      </p>
+    </div>
+  );
+}
+```
+
+- `Render Updated Post`: menampilkan informasi postingan yang sudah diperbarui setelah pembaruan berhasil, menggunakan data yang tersimpan di `updatedPost`.
