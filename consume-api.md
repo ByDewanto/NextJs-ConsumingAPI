@@ -224,8 +224,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 ### 3. PUT: Memperbarui Data
 
-Kode berikut adalah komponen `CreatePost` yang dibuat menggunakan `Nextjs`, di mana kita dapat membuat postingan baru dengan mengirimkan data ke endpoint API menggunakan fetch. Komponen ini berfungsi sebagai form input sederhana untuk mengisi judul dan isi postingan.
-
 Metode PUT dalam HTTP digunakan untuk memperbarui data yang sudah ada di server. Dalam aplikasi `Next.js`, kita dapat menggunakan metode PUT untuk mengirim perubahan data yang telah diambil dari API dan disesuaikan oleh pengguna. Pada contoh kode ini, kita akan membuat komponen `EditPost` yang berisi form sederhana yang memungkinkan pengguna untuk mengedit postingan yang sudah ada berdasarkan id.
 
 ## Kode Lengkap Komponen
