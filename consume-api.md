@@ -7,7 +7,7 @@ Konsumsi API (Application Programming Interface) adalah proses menggunakan layan
 - Mengirim permintaan ke endpoint API.
 - Memproses respons yang diterima.
 
-Dengan mengonsumsi API, aplikasi dapat berinteraksi dengan layanan pihak ketiga, mengakses data eksternal, serta mengintegrasikan fungsionalitas tambahan tanpa perlu mengembangkannya dari awal.
+Dengan mengonsumsi API, aplikasi dapat berintehttps://github.com/ByDewanto/NextJs-ConsumingAPI.gitraksi dengan layanan pihak ketiga, mengakses data eksternal, serta mengintegrasikan fungsionalitas tambahan tanpa perlu mengembangkannya dari awal.
 
 Pada tutorial ini, kita akan mempelajari cara mengonsumsi API menggunakan Next.js dengan beberapa metode HTTP: GET, POST, PUT, PATCH, dan DELETE. Kita akan menggunakan JSONPlaceholder sebagai API untuk keperluan testing.
 
@@ -494,3 +494,207 @@ if (!post) return <div>Loading...</div>;
 ```
 
 - `Render Updated Post`: menampilkan informasi postingan yang sudah diperbarui setelah pembaruan berhasil, menggunakan data yang tersimpan di `updatedPost`.
+
+
+## 4. Implementasi PATCH Request untuk Update Data
+
+#### Pendahuluan
+
+Dalam pengembangan web, metode PATCH digunakan untuk memperbarui sebagian dari suatu resource. Berbeda dengan PUT yang biasanya menggantikan seluruh data resource, PATCH memungkinkan kita mengirim perubahan hanya pada data tertentu. Misalnya, untuk mengubah `title` atau `body` dari sebuah post, cukup mengirim data yang berubah saja. Ini lebih efisien dan menghemat bandwidth, terutama pada aplikasi yang besar. Pada tutorial ini, kita akan menerapkan PATCH request di Next.js menggunakan React Hooks.
+
+---
+
+### Langkah-langkah Implementasi PATCH Request di Next.js
+
+#### 1. Persiapan Interface dan State Management
+
+Pertama, buat interface dan state untuk komponen kita. Interface digunakan untuk mendefinisikan struktur data post yang akan diambil dan diperbarui.
+
+```typescript
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}
+```
+
+- **Interface `Post`**: Mendefinisikan struktur data post dengan atribut `id`, `title`, `body`, dan `userId`.
+- **State Management**:
+  - `post`: Menyimpan data post yang diambil dari API.
+  - `title` dan `body`: Menyimpan input pengguna untuk mengedit title dan body post.
+  - `message`: Menyimpan pesan notifikasi sukses atau error setelah update.
+  - `updatedFields`: Menyimpan data yang berubah untuk ditampilkan setelah update.
+
+```typescript
+const [post, setPost] = useState<Post | null>(null);
+const [title, setTitle] = useState("");
+const [body, setBody] = useState("");
+const [message, setMessage] = useState("");
+const [updatedFields, setUpdatedFields] = useState<Partial<Post>>({});
+```
+
+---
+
+#### 2. Mengambil Data Post Berdasarkan ID
+
+Menggunakan `useEffect`, kita mengambil data post dari API berdasarkan ID dari URL.
+
+```typescript
+useEffect(() => {
+  const fetchPost = async () => {
+    try {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${params.id}`
+      );
+      const data = await response.json();
+      setPost(data);
+      setTitle(data.title);
+      setBody(data.body);
+    } catch (error) {
+      console.error("Error fetching post:", error);
+    }
+  };
+
+  fetchPost();
+}, [params?.id]);
+```
+
+**Penjelasan**:
+- `fetchPost` mengambil data post dari API. Hasilnya disimpan di state `post`, `title`, dan `body`, yang akan ditampilkan di form.
+- `useEffect` berjalan saat komponen di-mount dan mengambil post berdasarkan `params.id` yang diperoleh dari URL.
+
+---
+
+#### 3. Mengimplementasikan Fungsi PATCH untuk Memperbarui Data
+
+Fungsi ini mengirim permintaan PATCH hanya untuk field yang diubah oleh pengguna.
+
+```typescript
+const handlePatchUpdate = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // Siapkan data yang akan diupdate berdasarkan input pengguna
+  const updateData: Partial<Post> = {};
+  if (title !== post?.title) updateData.title = title;
+  if (body !== post?.body) updateData.body = body;
+
+  if (Object.keys(updateData).length === 0) {
+    setMessage("No changes to update");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/posts/${params.id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      }
+    );
+
+    const data = await response.json();
+    setMessage("Post updated successfully!");
+    setPost(data); // Update local state dengan data baru
+    setUpdatedFields(updateData); // Menyimpan field yang diubah saja
+    console.log("Patched post:", data);
+  } catch (error) {
+    setMessage("Error updating post");
+    console.error("Error:", error);
+  }
+};
+```
+
+**Penjelasan**:
+- **Partial<Post>**: `updateData` hanya berisi field yang diubah.
+- **Cek Kondisi**: Mengecek apakah `title` atau `body` berbeda dari data awal. Jika ada perbedaan, field yang berubah ditambahkan ke `updateData`.
+- **fetch PATCH request**: Mengirim permintaan PATCH ke server dengan `updateData`. Jika berhasil, `post` dan `updatedFields` diperbarui untuk menampilkan data yang baru.
+
+---
+
+#### 4. Membuat Tampilan Form untuk Edit Data
+
+Form ini memungkinkan pengguna mengedit title dan body dari post. Setelah diubah dan disubmit, pengguna akan melihat notifikasi berdasarkan hasil dari PATCH request.
+
+```typescript
+return (
+  <div className="p-4 max-w-md mx-auto">
+    <h1 className="text-2xl font-bold mb-4">Patch Post</h1>
+    {message && (
+      <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+        {message}
+      </div>
+    )}
+    <form onSubmit={handlePatchUpdate} className="space-y-4">
+      <div>
+        <label className="block mb-1">Title:</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border p-2 rounded text-black"
+          required
+        />
+      </div>
+      <div>
+        <label className="block mb-1">Body:</label>
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          className="w-full border p-2 rounded text-black"
+          rows={4}
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Patch Update
+      </button>
+    </form>
+
+    {Object.keys(updatedFields).length > 0 && (
+      <div className="mt-6 p-4 bg-gray-100 rounded text-black">
+        <h2 className="text-xl font-semibold">Updated Fields:</h2>
+        {updatedFields.title && (
+          <p>
+            <strong>Title:</strong> {updatedFields.title}
+          </p>
+        )}
+        {updatedFields.body && (
+          <p>
+            <strong>Body:</strong> {updatedFields.body}
+          </p>
+        )}
+      </div>
+    )}
+  </div>
+);
+```
+
+**Penjelasan**:
+- **Input dan Textarea**: Mengambil nilai dari `title` dan `body`, yang bisa diedit pengguna.
+- **onSubmit**: Saat form disubmit, `handlePatchUpdate` dijalankan untuk memperbarui data.
+- **Pesan Notifikasi**: Menampilkan pesan sukses atau error setelah pembaruan.
+- **Menampilkan Field yang Diubah**: Hanya field yang diubah (`updatedFields`) yang ditampilkan setelah update, sehingga pengguna bisa melihat perubahan spesifik yang mereka lakukan.
+
+---
+
+### Penjelasan Hasil
+
+Setelah submit:
+- **Jika berhasil**: Pesan "Post updated successfully!" ditampilkan, dan data yang baru langsung muncul pada bagian "Updated Fields."
+- **Jika error**: Pesan error akan ditampilkan.
+
+### Keuntungan Menggunakan PATCH
+
+- **Efisiensi**: Hanya mengirimkan data yang diubah, membuat permintaan lebih kecil dan cepat.
+- **Fleksibilitas**: Dapat memperbarui sebagian data tanpa memengaruhi data lainnya.
