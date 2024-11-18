@@ -698,3 +698,79 @@ Setelah submit:
 
 - **Efisiensi**: Hanya mengirimkan data yang diubah, membuat permintaan lebih kecil dan cepat.
 - **Fleksibilitas**: Dapat memperbarui sebagian data tanpa memengaruhi data lainnya.
+
+
+## 5. DELETE: Menghapus Data
+
+**Metode DELETE** dalam konteks API Next.js digunakan untuk **menghapus data** dari server. Ini merupakan salah satu dari empat metode HTTP standar (GET, POST, PUT, DELETE) yang digunakan untuk berinteraksi dengan API.
+
+### Cara Kerja Metode DELETE dalam Next.js
+
+1. **Request:**
+   * **Client (Frontend):** Ketika pengguna ingin menghapus data, frontend (misalnya, tombol "Hapus") akan mengirimkan permintaan DELETE ke server Next.js. Permintaan ini biasanya berisi ID dari data yang ingin dihapus dalam URL atau body request.
+   * **Server (Next.js):** Server Next.js akan menerima permintaan DELETE dan memparsing informasi yang disertakan.
+
+2. **Proses di Server:**
+   * **Validasi:** Server akan memvalidasi permintaan untuk memastikan bahwa pengguna memiliki izin untuk menghapus data tersebut dan data yang ingin dihapus memang ada.
+   * **Penghapusan Data:** Jika validasi berhasil, server akan menjalankan logika untuk menghapus data dari database atau sumber data lainnya.
+   * **Respon:** Server akan mengirimkan respons HTTP dengan status kode 204 (No Content) jika penghapusan berhasil, atau status kode yang sesuai dengan kesalahan yang terjadi (misalnya, 404 Not Found jika data tidak ditemukan).
+
+3. **Client:**
+   * **Pembaruan UI:** Frontend akan memperbarui tampilan untuk mencerminkan perubahan data. Misalnya, jika sebuah item dalam daftar dihapus, item tersebut akan dihilangkan dari daftar.
+
+### Contoh Implementasi dalam Next.js
+
+```javascript
+// pages/api/posts/[id].js
+import { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'DELETE') {
+    const id = req.query.id;
+
+    // Logic untuk menghapus data dengan ID tertentu
+    // Misalnya, menggunakan database MongoDB
+    try {
+      await db.collection('posts').deleteOne({ _id: ObjectId(id) });
+      res.status(204).end();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  } else {
+    res.status(405).end(); // Method Not Allowed
+  }
+}
+```
+
+### Penjelasan Kode:
+
+* **API Route:** File `pages/api/posts/[id].js` mendefinisikan sebuah API route untuk menangani permintaan terkait postingan dengan ID tertentu.
+* **Metode DELETE:** Kode hanya akan dijalankan jika metode permintaan adalah DELETE.
+* **Pengambilan ID:** ID postingan yang akan dihapus diambil dari query parameter `id`.
+* **Logika Penghapusan:** Bagian ini akan diganti dengan logika aktual untuk menghapus data dari database Anda. Contoh di atas menggunakan MongoDB.
+* **Respon:** Jika penghapusan berhasil, status kode 204 akan dikirimkan. Jika terjadi kesalahan, status kode 500 akan dikirimkan beserta pesan error.
+
+### Pertimbangan Tambahan:
+
+* **Otorisasi:** Pastikan Anda menerapkan mekanisme otorisasi untuk memastikan hanya pengguna yang berwenang yang dapat menghapus data.
+* **Validasi:** Lakukan validasi terhadap data yang diterima untuk mencegah serangan injeksi dan kesalahan lainnya.
+* **Transaksi:** Jika penghapusan melibatkan beberapa operasi, gunakan transaksi untuk menjaga konsistensi data.
+* **Logging:** Catat semua permintaan DELETE untuk tujuan debugging dan analisis.
+
+### Penggunaan dalam Frontend
+
+```javascript
+import axios from 'axios';
+
+const deletePost = async (id) => {
+  try {
+    await axios.delete(`/api/posts/${id}`);
+    // Perbarui UI setelah penghapusan berhasil
+  } catch (error) {
+    console.error(error);
+  }
+};
+```
+
+Metode DELETE dalam API Next.js adalah sebuah mekanisme untuk menghapus data dari server. Ketika seorang pengguna ingin menghapus data tertentu (misalnya, sebuah postingan blog), frontend akan mengirimkan permintaan DELETE ke server Next.js. Server kemudian akan memvalidasi permintaan, menghapus data yang sesuai dari database, dan mengirimkan respons kepada frontend.
